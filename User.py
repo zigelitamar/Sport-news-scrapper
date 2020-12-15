@@ -1,25 +1,26 @@
 import sqlite3
 import UsersTeamsTable
+from flask_login import UserMixin
 from db import db
 
-class UserModel(db.Model):
-    __tablename__ = 'users'
 
-    username = db.Column(db.String(80), primary_key=True)
+class UserModel(UserMixin, db.Model):
+    __tablename__ = 'users'
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True)
     password = db.Column(db.String(80))
-    is_login = db.Column(db.Boolean)
-    teams =  db.relationship('TeamModel', secondary=UsersTeamsTable.UsersTeams, backref='users')
+    teams = db.relationship(
+        'TeamModel', secondary=UsersTeamsTable.UsersTeams, backref='users')
 
     def __init__(self, username, password, teams=[]):
         # self.id = id
         self.username = username
         self.password = password
         self.teams = teams
-        self.is_login = False
 
     @classmethod
     def find_by_username(cls, username):
-        return cls.query.filter_by(username=username).first() 
+        return cls.query.filter_by(username=username).first()
 
     @classmethod
     def find_by_id(cls, id):
@@ -33,14 +34,11 @@ class UserModel(db.Model):
     def save_to_db(self):
         db.session.add(self)
         db.session.commit()
-    
+
     def delete_from_db(self):
         db.session.delete(self)
         db.session.commit()
-    
-    def json(self):
-        return {'username': self.username, 
-                'Status': 'Logged In' if self.is_login else 'Logged Out',
-                'Teams': [team.json() for team in self.teams]}
 
-    
+    def json(self):
+        return {'username': self.username,
+                'Teams': [team.json() for team in self.teams]}

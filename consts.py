@@ -1,5 +1,5 @@
 TEAMS = [
-    'MACCABI_TEL_AVIV', 
+    'MACCABI_TEL_AVIV',
     'IRONI_KIRYAT_SHMONA',
     'MACCABI_PETAH_TIKVA',
     'MACCABI_NETANYA',
@@ -32,6 +32,7 @@ ONE_TEAMS_PAGES = {
     'BNEI_YEHUDA':          'https://www.one.co.il/Soccer/team/11',
     'BEITAR_JERUSALEM':     'https://www.one.co.il/Soccer/team/2'
 }
+TEAMS_ONE_REVERSE = {v: k for k, v in ONE_TEAMS_PAGES.items()}
 
 # Teams Page in Walla Sport:
 WALLA_TEAMS_PAGES = {
@@ -50,7 +51,7 @@ WALLA_TEAMS_PAGES = {
     'BNEI_YEHUDA':          'https://sports.walla.co.il/team/745?league=157',
     'BEITAR_JERUSALEM':     'https://sports.walla.co.il/team/742?league=157'
 }
-
+TEAMS_WALLA_REVERSE = {v: k for k, v in WALLA_TEAMS_PAGES.items()}
 # Teams Page in Sport5:
 SPORT5_TEAMS_PAGES = {
     'MACCABI_TEL_AVIV':     'https://www.sport5.co.il/team.aspx?FolderID=192',
@@ -68,3 +69,4 @@ SPORT5_TEAMS_PAGES = {
     'BNEI_YEHUDA':          'https://www.sport5.co.il/team.aspx?FolderID=190',
     'BEITAR_JERUSALEM':     'https://www.sport5.co.il/team.aspx?FolderID=191'
 }
+TEAMS_SPORT5_REVERSE = {v: k for k, v in SPORT5_TEAMS_PAGES.items()}
