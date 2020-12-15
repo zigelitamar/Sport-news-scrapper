@@ -100,8 +100,7 @@ def regiter():
         return {'Message': 'username exists already!'}, 400
     user = UserModel(username=username,
                      password=generate_password_hash(password))
-    print(generate_password_hash(password, "sha256"))
-    print(check_password_hash(generate_password_hash(password), password))
+
     user.save_to_db()
     return {'Message': f'Succsefully registered {user.username}'}, 201
 
