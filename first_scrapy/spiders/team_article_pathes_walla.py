@@ -1,4 +1,5 @@
 import scrapy
+import consts
 
 class WallaArticlePathes(scrapy.Spider):
     name = "WallaArticlePathes"
@@ -11,6 +12,7 @@ class WallaArticlePathes(scrapy.Spider):
 
     def parse(self, response):
         yield{
-            'articles': response.css("section.sequence.common-articles a::attr(href)").getall(),
-            'images': response.css("article.article.fc.common-article img::attr(src)").getall()
+            'team': consts.TEAMS_WALLA_REVERSE[response.url],
+            'articles': (response.css("section.sequence.common-articles a::attr(href)").getall())[:consts.MAX_ARTICLES_FROM_SITE],
+            'images': (response.css("article.article.fc.common-article img::attr(src)").getall())[:consts.MAX_ARTICLES_FROM_SITE]
         }

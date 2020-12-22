@@ -1,4 +1,5 @@
 import scrapy
+from datetime import datetime
 
 class ArticleSport5(scrapy.Spider):
     name = "ArticleSport5"
@@ -12,10 +13,9 @@ class ArticleSport5(scrapy.Spider):
     def parse(self, response):
         yield{
             'url': response.url,
-            'title': response.css("h1.article-main::text").get(),
-            'sub_title': response.css("h2.article-sub-main::text").get(),
-            # 'article_image': response.css("header.entry-header img::attr(data-lazy)").get(),
+            'title': response.css("h1.article-main::text").get().replace('  ', '').replace('\n', '').replace('\r',''),
+            'sub_title': response.css("h2.article-sub-main::text").get().replace('  ', '').replace('\n', '').replace('\r',''),
             'body': '\n\n'.join(response.css("div.article-content p::text").getall()),
-            'published_date': response.css("span.hint::text").get(),
+            'published_date': response.css("span.hint::text").get()[2:].replace('  ', '').replace('\n', '').replace('\r','').replace('.', '/').replace('20 ', '2020 ').replace('-', ''),
             'source': 'Sport5'
         }

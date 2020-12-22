@@ -1,4 +1,5 @@
 import scrapy
+from datetime import datetime
 
 class ArticleOne(scrapy.Spider):
     name = "ArticleOne"
@@ -16,6 +17,6 @@ class ArticleOne(scrapy.Spider):
             'sub_title': response.css("h2.article-sub-title::text").get(),
             'article_image': (response.css("div.article-image img::attr(src)").get()),
             'body': '\n\n'.join(response.css("div.article-body-container p::text").getall()),
-            'published_date': response.css("div.article-credit::text").get(),
+            'published_date': (response.css("div.article-credit::text").get().replace('|','').replace('\r',''))[1:],
             'source': 'One'
         }

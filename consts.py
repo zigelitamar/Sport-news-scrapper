@@ -70,3 +70,5 @@ SPORT5_TEAMS_PAGES = {
     'BEITAR_JERUSALEM':     'https://www.sport5.co.il/team.aspx?FolderID=191'
 }
 TEAMS_SPORT5_REVERSE = {v: k for k, v in SPORT5_TEAMS_PAGES.items()}
+
+MAX_ARTICLES_FROM_SITE = 15

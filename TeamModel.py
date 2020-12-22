@@ -1,6 +1,6 @@
 import sqlite3
+import ArticlesTeamsTable
 from db import db
-
 
 class TeamModel(db.Model):
     __tablename__ = 'teams'
@@ -9,6 +9,7 @@ class TeamModel(db.Model):
     one_address = db.Column(db.String)
     walla_address = db.Column(db.String)
     sport5_address = db.Column(db.String)
+    team_articles = db.relationship('ArticleModel', secondary=ArticlesTeamsTable.ArticlesTeamTable, backref='teams')
 
     def __init__(self, team_name, one_address, walla_address, sport5_address):
         # self.id = id

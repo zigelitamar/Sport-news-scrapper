@@ -14,6 +14,6 @@ class OneArticlePathes(scrapy.Spider):
     def parse(self, response):
         yield{
             'team': consts.TEAMS_ONE_REVERSE[response.url],
-            'articles': response.css("div.leagues-right-column a.article-top::attr(href)").getall() + response.css("div.leagues-right-column a.article-plain::attr(href)").getall(),
-            'images': [image.replace('src=', '').replace('"', '') for image in response.css('div.leagues-right-column a.article-top').get().split(' ') if 'images.one' in image] + response.css('div.leagues-right-column img::attr(src)').getall()
+            'articles': (response.css("div.leagues-right-column a.article-top::attr(href)").getall() + response.css("div.leagues-right-column a.article-plain::attr(href)").getall())[:consts.MAX_ARTICLES_FROM_SITE],
+            'images': (response.css('div.leagues-right-column img::attr(src)').getall())[:consts.MAX_ARTICLES_FROM_SITE]
         }
