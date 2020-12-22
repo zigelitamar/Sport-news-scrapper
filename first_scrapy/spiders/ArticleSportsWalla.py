@@ -1,4 +1,6 @@
 import scrapy
+from utils import fix_date
+from datetime import datetime
 
 class ArticleSportsWalla(scrapy.Spider):
     name = "ArticleSportsWalla"
@@ -16,6 +18,6 @@ class ArticleSportsWalla(scrapy.Spider):
             'sub_title': response.css("section.item-main-content p::text").get(),
             # 'article_image': response.css("figure img::attr(src)").getall(),
             'body': '\n\n'.join(response.css("section.article-content p::text").getall()),
-            'published_date': response.css("div.wrap time::attr(datetime)").get(),
+            'published_date': fix_date(response.css("div.wrap time::attr(datetime)").get()),
             'source': 'Walla'
         }

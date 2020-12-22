@@ -13,6 +13,7 @@ from flask import jsonify
 from flask_login import LoginManager, login_user, login_required, current_user, logout_user
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS
 from Article import ArticleModel
 from TeamModel import TeamModel
 from one_handler import OneHandler
@@ -21,8 +22,11 @@ from sport5_handler import Sport5Handler
 from manager import ArticlesManager
 from User import UserModel
 from werkzeug.security import generate_password_hash, check_password_hash
+
 app = Flask(__name__)
 cors = CORS(app)
+CORS(app)
+
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
 app.config['SECRET_KEY'] = 'noonewilleverknowiswear'
@@ -35,10 +39,30 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 
 
+@app.before_first_request
+def create_tables():
+    if not os.path.exists('data.db'):
+        db.create_all()
+        init_teams()
+    scheduler.start()
+
+
+def init_teams():
+    teams = []
+    for team in TEAMS:
+        team_obj = TeamModel(team_name=team,
+                             one_address=ONE_TEAMS_PAGES[team],
+                             walla_address=WALLA_TEAMS_PAGES[team],
+                             sport5_address=SPORT5_TEAMS_PAGES[team])
+        teams.append(team_obj)
+    TeamModel.save_to_db_bulk(teams)
+
+
 def get_new_articles():
     with app.app_context():
         print("*******************************************************************************")
         print("started seearhing for articles..")
+        print('Amit')
         print("*******************************************************************************")
         one_teams_pages = []
         walla_teams_pages = []
@@ -75,6 +99,7 @@ def create_tables():
     #                              sport5_address=SPORT5_TEAMS_PAGES[team])
     #         teams.append(team_obj)
     #     TeamModel.save_to_db_bulk(teams)
+             seconds = 60*3, next_run_time = datetime.now()+timedelta(seconds=30))
 
 
 @login_manager.user_loader
@@ -88,31 +113,31 @@ def load_user(userid):
 #     return render_template("index.html")
 
 
-@app.route('/register', methods=['POST'])
+@app.route('/register', methods = ['POST'])
 def regiter():
-    data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
+    data=request.get_json()
+    username=data.get('username')
+    password=data.get('password')
 
-    user = UserModel.find_by_username(username)
+    user=UserModel.find_by_username(username)
 
     if user:
         return {'Message': 'username exists already!'}, 400
-    user = UserModel(username=username,
-                     password=generate_password_hash(password))
+    user=UserModel(username = username,
+                     password = generate_password_hash(password))
 
     user.save_to_db()
     return {'Message': f'Succsefully registered {user.username}'}, 201
 
 
-@app.route('/login', methods=['POST'])
+@app.route('/login', methods = ['POST'])
 def login():
     print("i got here")
-    data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
+    data=request.get_json()
+    username=data.get('username')
+    password=data.get('password')
 
-    user = UserModel.find_by_username(username)
+    user=UserModel.find_by_username(username)
     login_user(user)
     if not user:
         return {'Message': f'incorrect username or password'}, 401
@@ -128,12 +153,17 @@ def login():
 @login_required
 def get_my_articles():
 
-    user = current_user
+    user=current_user
 
-    articles = {}
+    articles={}
     for team in user.teams:
-        toAdd = []
-        for article in ArticleModel.find_by_team(team.team_name).all():
+        toAdd=[]
+
+        team_articles=team.team_articles
+        team_articles_sorted=sorted(
+            team_articles, key = lambda k: k.published_date, reverse=True)
+
+        for article in team_articles_sorted:
             toAdd.append(article.json())
         articles[team.team_name] = toAdd
     return articles
