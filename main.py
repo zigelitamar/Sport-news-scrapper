@@ -11,6 +11,7 @@ from flask import Flask, render_template
 from flask import request
 from flask import jsonify
 from flask_login import LoginManager, login_user, login_required, current_user, logout_user
+from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from Article import ArticleModel
 from TeamModel import TeamModel
@@ -21,7 +22,7 @@ from manager import ArticlesManager
 from User import UserModel
 from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask(__name__)
-
+cors = CORS(app)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
 app.config['SECRET_KEY'] = 'noonewilleverknowiswear'
@@ -32,24 +33,6 @@ app.config['PROPAGATE_EXCEPTIONS'] = True
 manager = ArticlesManager([])
 login_manager = LoginManager()
 login_manager.init_app(app)
-
-
-@app.before_first_request
-def create_tables():
-    db.create_all()
-    init_teams()
-    scheduler.start()
-
-
-def init_teams():
-    teams = []
-    for team in TEAMS:
-        team_obj = TeamModel(team_name=team,
-                             one_address=ONE_TEAMS_PAGES[team],
-                             walla_address=WALLA_TEAMS_PAGES[team],
-                             sport5_address=SPORT5_TEAMS_PAGES[team])
-        teams.append(team_obj)
-    TeamModel.save_to_db_bulk(teams)
 
 
 def get_new_articles():
@@ -74,7 +57,24 @@ def get_new_articles():
 
 scheduler = BackgroundScheduler()
 scheduler.add_job(func=get_new_articles, trigger="interval",
-                  seconds=60*15, next_run_time=datetime.now()+timedelta(seconds=10))
+                  seconds=60*15, next_run_time=datetime.now()+timedelta(seconds=15))
+
+
+@app.before_first_request
+def create_tables():
+    print('hi')
+    # init_teams()
+    # scheduler.start()
+
+    # def init_teams():
+    #     teams = []
+    #     for team in TEAMS:
+    #         team_obj = TeamModel(team_name=team,
+    #                              one_address=ONE_TEAMS_PAGES[team],
+    #                              walla_address=WALLA_TEAMS_PAGES[team],
+    #                              sport5_address=SPORT5_TEAMS_PAGES[team])
+    #         teams.append(team_obj)
+    #     TeamModel.save_to_db_bulk(teams)
 
 
 @login_manager.user_loader
@@ -107,6 +107,7 @@ def regiter():
 
 @app.route('/login', methods=['POST'])
 def login():
+    print("i got here")
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
