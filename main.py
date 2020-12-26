@@ -166,8 +166,6 @@ def login():
 @token_required
 def get_my_articles(auth):
 
-    data = request.get_json()
-
     user = auth
 
     articles = {}
