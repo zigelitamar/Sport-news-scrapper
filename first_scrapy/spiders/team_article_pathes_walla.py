@@ -2,6 +2,8 @@ import scrapy
 import consts
 
 class WallaArticlePathes(scrapy.Spider):
+    """Scrapy spider class to fetch walla articles addresses
+    """
     name = "WallaArticlePathes"
 
     def __init__(self, category=None, *args, **kwargs):
@@ -11,6 +13,11 @@ class WallaArticlePathes(scrapy.Spider):
         self.start_urls = kwargs.get('start_urls', '').split(', ')
 
     def parse(self, response):
+        """Fetch all teams article addresses
+
+        Args:
+            response (dict): Dictionary that contains for each article: team name, article address, article image.
+        """
         yield{
             'team': consts.TEAMS_WALLA_REVERSE[response.url],
             'articles': (response.css("section.sequence.common-articles a::attr(href)").getall())[:consts.MAX_ARTICLES_FROM_SITE],

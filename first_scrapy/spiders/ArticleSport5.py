@@ -3,6 +3,8 @@ from datetime import datetime
 
 
 class ArticleSport5(scrapy.Spider):
+    """Scrapy spider class to fetch sport5 articles
+    """
     name = "ArticleSport5"
 
     def __init__(self, category=None, *args, **kwargs):
@@ -11,6 +13,11 @@ class ArticleSport5(scrapy.Spider):
         self.start_urls = kwargs.get('start_urls', '').split(', ')
 
     def parse(self, response):
+        """Main method of Scrapy spiders. return full article details
+
+        Args:
+            response (dict): Article details
+        """
         yield{
             'url': response.url,
             'title': response.css("h1.article-main::text").get().replace('  ', '').replace('\n', '').replace('\r', ''),
@@ -19,3 +26,4 @@ class ArticleSport5(scrapy.Spider):
             'published_date': response.css("span.hint::text").get()[2:].replace('  ', '').replace('\n', '').replace('\r', '').replace('.', '/').replace('20 ', '2020 ').replace('-', ''),
             'source': 'Sport5'
         }
+
