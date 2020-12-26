@@ -1,17 +1,20 @@
+
+
 import os
 import scrapy
+import jwt
 import json
 import subprocess
 from datetime import datetime, timedelta
 from consts import ONE_TEAMS_PAGES, WALLA_TEAMS_PAGES, SPORT5_TEAMS_PAGES, TEAMS
 import time
 import atexit
+from functools import wraps
 from apscheduler.schedulers.background import BackgroundScheduler
-from flask import Flask, render_template
+from flask import Flask, render_template, current_app
 from flask import request
 from flask import jsonify
 from flask_login import LoginManager, login_user, login_required, current_user, logout_user
-from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from Article import ArticleModel
@@ -24,7 +27,6 @@ from User import UserModel
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-cors = CORS(app)
 CORS(app)
 
 
@@ -81,87 +83,100 @@ def get_new_articles():
 
 scheduler = BackgroundScheduler()
 scheduler.add_job(func=get_new_articles, trigger="interval",
-                  seconds=60*15, next_run_time=datetime.now()+timedelta(seconds=15))
+                  seconds=60*20, next_run_time=datetime.now()+timedelta(seconds=60*30))
 
 
-@app.before_first_request
-def create_tables():
-    print('hi')
-    # init_teams()
-    # scheduler.start()
+def token_required(f):
+    @wraps(f)
+    def _verify(*args, **kwargs):
+        print(request.headers)
+        auth_headers = request.headers.get('Authorization', '').split()
+        print("^^")
+        print(auth_headers)
+        print("^^")
+        invalid_msg = {
+            'message': 'Invalid token. Registeration and / or authentication required',
+            'authenticated': False
+        }
+        expired_msg = {
+            'message': 'Expired token. Reauthentication required.',
+            'authenticated': False
+        }
 
-    # def init_teams():
-    #     teams = []
-    #     for team in TEAMS:
-    #         team_obj = TeamModel(team_name=team,
-    #                              one_address=ONE_TEAMS_PAGES[team],
-    #                              walla_address=WALLA_TEAMS_PAGES[team],
-    #                              sport5_address=SPORT5_TEAMS_PAGES[team])
-    #         teams.append(team_obj)
-    #     TeamModel.save_to_db_bulk(teams)
-             seconds = 60*3, next_run_time = datetime.now()+timedelta(seconds=30))
+        if len(auth_headers) != 2:
+            return jsonify(invalid_msg), 401
+
+        try:
+            token = auth_headers[1]
+            data = jwt.decode(token, current_app.config['SECRET_KEY'])
+            user = UserModel.query.filter_by(username=data['sub']).first()
+            if not user:
+                raise RuntimeError('User not found')
+            return f(user, *args, **kwargs)
+        except jwt.ExpiredSignatureError:
+            # 401 is Unauthorized HTTP status code
+            return jsonify(expired_msg), 401
+        except (jwt.InvalidTokenError, Exception) as e:
+            print(e)
+            return jsonify(invalid_msg), 401
+
+    return _verify
 
 
-@login_manager.user_loader
-def load_user(userid):
-    return UserModel.query.get(int(userid))
-
-
-# @app.route('/')
-# def start():
-#     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-#     return render_template("index.html")
-
-
-@app.route('/register', methods = ['POST'])
+@app.route('/register', methods=['POST'])
 def regiter():
-    data=request.get_json()
-    username=data.get('username')
-    password=data.get('password')
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
 
-    user=UserModel.find_by_username(username)
+    user = UserModel.find_by_username(username)
 
     if user:
         return {'Message': 'username exists already!'}, 400
-    user=UserModel(username = username,
-                     password = generate_password_hash(password))
+    user = UserModel(username=username,
+                     password=generate_password_hash(password))
 
     user.save_to_db()
     return {'Message': f'Succsefully registered {user.username}'}, 201
 
 
-@app.route('/login', methods = ['POST'])
+@app.route('/login', methods=['POST'])
 def login():
-    print("i got here")
-    data=request.get_json()
-    username=data.get('username')
-    password=data.get('password')
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
 
-    user=UserModel.find_by_username(username)
-    login_user(user)
+    user = UserModel.find_by_username(username)
+
     if not user:
         return {'Message': f'incorrect username or password'}, 401
 
     if not check_password_hash(user.password, password):
         return {'Message': f'incorrect username or password'}, 401
 
-    user.save_to_db()
-    return {'Message': user.json()}, 200
+    token = jwt.encode({
+        'sub': user.username,
+        'iat': datetime.utcnow(),
+        'exp': datetime.utcnow() + timedelta(minutes=30)},
+        current_app.config['SECRET_KEY'])
+    return jsonify({'token': token.decode('UTF-8')})
 
 
 @app.route('/get_my_articles')
-@login_required
-def get_my_articles():
+@token_required
+def get_my_articles(auth):
 
-    user=current_user
+    data = request.get_json()
 
-    articles={}
+    user = auth
+
+    articles = {}
     for team in user.teams:
-        toAdd=[]
+        toAdd = []
 
-        team_articles=team.team_articles
-        team_articles_sorted=sorted(
-            team_articles, key = lambda k: k.published_date, reverse=True)
+        team_articles = team.team_articles
+        team_articles_sorted = sorted(
+            team_articles, key=lambda k: k.published_date, reverse=True)
 
         for article in team_articles_sorted:
             toAdd.append(article.json())
@@ -170,21 +185,23 @@ def get_my_articles():
 
 
 @app.route('/logout')
-@login_required
+@token_required
 def logout():
     logout_user()
     return "loggedout"
 
 
 @app.route('/teams', methods=['POST'])
-@login_required
-def add_teams():
+@token_required
+def add_teams(auth):
     data = request.get_json()
     # username = data.get('username')
     # password = data.get('password')
-    teams = data.get('teams')
+    print(data)
+    teams = data
 
-    user = current_user
+    print(auth)
+    user = auth
 
     teams_obj_to_add = get_teams(teams)
     print(user.teams)
@@ -194,12 +211,23 @@ def add_teams():
     return {'Message': user.json()}, 200
 
 
+@app.route('/teams')
+@token_required
+def get_my_teams(auth):
+    user = auth
+    res = [x.team_name for x in user.teams]
+    print(res)
+
+    return {'Message': res}, 200
+
+
 @app.route('/teamsRem', methods=['POST'])
-@login_required
-def remove_teams():
+@token_required
+def remove_teams(auth):
     data = request.json
+
     teams = data.get('teams')
-    user = current_user
+    user = auth
 
     teams_remove = get_teams(teams)
     user.teams.remove(teams_remove[0])
@@ -209,7 +237,7 @@ def remove_teams():
 
 def get_teams(teams):
     data = request.get_json()
-    teams = data.get('teams')
+    teams = data
 
     teams = TeamModel.find_by_teams_names(teams)
     print(teams)

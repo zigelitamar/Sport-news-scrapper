@@ -14,7 +14,8 @@ class ArticleModel(db.Model):
     published_date = db.Column(db.Integer)
     article_image = db.Column(db.String)
     source = db.Column(db.String)
-    article_teams = db.relationship('TeamModel', secondary=ArticlesTeamsTable.ArticlesTeamTable, backref='articles')
+    article_teams = db.relationship(
+        'TeamModel', secondary=ArticlesTeamsTable.ArticlesTeamTable, backref='articles')
 
     def __init__(self, url,
                  title,
@@ -29,7 +30,8 @@ class ArticleModel(db.Model):
         self.title = title
         self.sub_title = sub_title
         self.body = body
-        self.published_date = int(datetime.strptime(published_date, '%d/%m/%Y %H:%M').timestamp())
+        self.published_date = int(datetime.strptime(
+            published_date, '%d/%m/%Y %H:%M').timestamp())
         self.article_image = article_image
         self.source = source
 
@@ -52,7 +54,7 @@ class ArticleModel(db.Model):
     @classmethod
     def find_by_articles_url(cls, articles_urls):
         return cls.query.filter(ArticleModel.url.in_(articles_urls)).all()
-    
+
     @classmethod
     def find_by_articles_url_one(cls, url):
         return cls.query.filter_by(url=url).first()
@@ -68,7 +70,7 @@ class ArticleModel(db.Model):
     def json(self):
         return {
             'title': self.title,
-            'sub-title': self.sub_title,
+            'sub_title': self.sub_title,
             'body': self.body,
             'date': datetime.utcfromtimestamp(self.published_date).strftime('%d-%m-%Y %H:%M'),
             'image': self.article_image,

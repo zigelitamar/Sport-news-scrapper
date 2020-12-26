@@ -51,12 +51,17 @@ class WallaHandler(object):
                 #     all_teams_article_dict.update(articles_images_dict)
                 for article in articles_images_dict.keys():
                     if all_teams_article_dict.get(article):
-                        all_teams_article_dict[article]['team'] = all_teams_article_dict.get(article)['team'] | articles_images_dict[article]['team']
+                        all_teams_article_dict[article]['team'] = all_teams_article_dict.get(
+                            article)['team'] | articles_images_dict[article]['team']
                     else:
                         all_teams_article_dict[article] = articles_images_dict[article]
         return all_teams_article_dict
 
     def get_full_articles(self, article_urls):
+        print("*********************")
+        print(article_urls)
+        print(type(article_urls))
+        print("*********************")
         if not article_urls:
             return []
 
@@ -68,23 +73,32 @@ class WallaHandler(object):
                        articles_address_str, 'articles.json')
 
         with open('articles.json', encoding="utf-8", errors='ignore') as json_file:
-            data = json.load(json_file)
+            try:
+                data = json.load(json_file)
+
+            except:
+                print("something went wrong with an article at walla")
+                return []
+
             for article in data:
-                article['article_image'] = article_urls[article['url']].get('image')
+                article['article_image'] = article_urls[article['url']].get(
+                    'image')
                 # article['team'] = ', '.join(list(article_urls[article['url']].get('team')))
                 article['article_teams'] = []
-                articles_teams_dictionary[article['url']] = list(article_urls[article['url']].get('team'))
+                articles_teams_dictionary[article['url']] = list(
+                    article_urls[article['url']].get('team'))
                 article_object = ArticleModel(**article)
                 articles.append(article_object)
 
             if articles:
                 ArticleModel.save_to_db_bulk(articles)
-            
+
             urls = [article.url for article in articles]
-            
+
             for url in urls:
                 article_obj = ArticleModel.find_by_articles_url_one(url)
-                article_obj.article_teams = TeamModel.find_by_teams_names(articles_teams_dictionary[url])
+                article_obj.article_teams = TeamModel.find_by_teams_names(
+                    articles_teams_dictionary[url])
                 article_obj.save_to_db()
 
             return articles
