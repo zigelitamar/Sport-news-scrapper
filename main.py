@@ -207,7 +207,7 @@ def get_my_articles(auth):
 
 @app.route('/logout')
 @token_required
-def logout():
+def logout(auth):
     """Log out the User
 
     Returns:
