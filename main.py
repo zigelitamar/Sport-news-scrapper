@@ -1,5 +1,4 @@
 
-
 import os
 import scrapy
 import jwt
@@ -14,8 +13,6 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from flask import Flask, render_template, current_app
 from flask import request
 from flask import jsonify
-from flask_login import LoginManager, login_user, login_required, current_user, logout_user
-from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from Article import ArticleModel
 from TeamModel import TeamModel
@@ -37,8 +34,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # To allow flask propagating exception even if debug is set to false on app
 app.config['PROPAGATE_EXCEPTIONS'] = True
 manager = ArticlesManager([])
-login_manager = LoginManager()
-login_manager.init_app(app)
 
 
 @app.before_first_request
@@ -87,7 +82,7 @@ def get_new_articles():
 
 scheduler = BackgroundScheduler()
 scheduler.add_job(func=get_new_articles, trigger="interval",
-                  seconds=60*10, next_run_time=datetime.now()+timedelta(seconds=30))
+                  seconds=60*30, next_run_time=datetime.now()+timedelta(seconds=3000))
 
 
 def token_required(f):
@@ -121,6 +116,7 @@ def token_required(f):
 
         try:
             token = auth_headers[1]
+            print(token)
             data = jwt.decode(token, current_app.config['SECRET_KEY'])
             user = UserModel.query.filter_by(username=data['sub']).first()
             if not user:
@@ -179,7 +175,6 @@ def login():
         'iat': datetime.utcnow(),
         'exp': datetime.utcnow() + timedelta(minutes=30)},
         current_app.config['SECRET_KEY'])
-    print(token)
     return jsonify({'token': token.decode('UTF-8')})
 
 
@@ -218,7 +213,6 @@ def logout():
     Returns:
         (str): Logout message
     """
-    logout_user()
     return "loggedout"
 
 
