@@ -9,10 +9,15 @@ from TeamModel import TeamModel
 
 
 class WallaHandler(object):
-    # def get_teams_pages(self, teams: list):
-    #     return {team: WALLA_TEAMS_PAGES[team] for team in teams}
-
     def get_new_articles(self, teams):
+        """Fetch teams new articles, That not exists in DB already, and creates ArticleModels from tham.
+
+        Args:
+            teams (list): List of teams to fetch thier articles.
+
+        Returns:
+            [ArticleModels]: List of article models of the teams that was given as parameter.
+        """
         article_addresses_dict = self.get_article_pages(teams)
 
         exists_in_db, new_articles_addresses = self.split_articles(
@@ -22,6 +27,14 @@ class WallaHandler(object):
         return exists_in_db + new_articles
 
     def split_articles(self, article_addresses_dict):
+        """Split Article from article_addresses_dict to already fetched articles, and new articles
+
+        Args:
+            article_addresses_dict (dict): all fetched articles urls.
+
+        Returns:
+            (dict, dict): Tuple of already exists articles and new articles urls
+        """
         exists_in_db = ArticleModel.find_by_articles_url(
             article_addresses_dict.keys())
         exists_in_db_list = [article.url for article in exists_in_db]
@@ -35,6 +48,14 @@ class WallaHandler(object):
         return exists_in_db, article_addresses_dict_new
 
     def get_article_pages(self, teams_pages):
+        """From teams website pages, scraping the images and article urls
+
+        Args:
+            teams_pages (list): the teams main pages in One website
+
+        Returns:
+            [dict]: Dictionary of article details (article url, image, source)
+        """
         team_address_str = ', '.join(teams_pages)
 
         scrape_to_file('WallaArticlePathes', team_address_str, 'out.json')
@@ -58,6 +79,14 @@ class WallaHandler(object):
         return all_teams_article_dict
 
     def get_full_articles(self, article_urls):
+        """Scraping full article details from the urls in article_urls.
+
+        Args:
+            article_urls (list): list of articles urls to scrape from the website
+
+        Returns:
+            [ArticleModel]: List of Article models.
+        """
         print("*********************")
         print(article_urls)
         print(type(article_urls))

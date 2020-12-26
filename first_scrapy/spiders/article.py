@@ -2,6 +2,8 @@ import scrapy
 from datetime import datetime
 
 class ArticleOne(scrapy.Spider):
+    """Scrapy spider class to fetch sport5 articles
+    """
     name = "ArticleOne"
 
     def __init__(self, category=None, *args, **kwargs):
@@ -11,6 +13,11 @@ class ArticleOne(scrapy.Spider):
         self.start_urls = kwargs.get('start_urls', '').split(', ')
 
     def parse(self, response):
+        """Main method of Scrapy spiders. return full article details
+
+        Args:
+            response (dict): Article details
+        """
         yield{
             'url': response.url,
             'title': response.css("h1.article-main-title::text").get(),

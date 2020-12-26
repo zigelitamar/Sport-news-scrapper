@@ -5,6 +5,13 @@ from db import db
 
 
 class ArticleModel(db.Model):
+    """Article Model class
+    this class is an article model class to interact with SQLAlchemy.
+    every article in the db will be mapped to this model.
+
+    Args:
+        db (DB): The db object to interact with SQLAlchemy.
+    """
     __tablename__ = 'articles'
 
     url = db.Column(db.String, primary_key=True)
@@ -40,19 +47,48 @@ class ArticleModel(db.Model):
 
     @classmethod
     def find_by_title(cls, title):
+        """Find article by title
+
+        Args:
+            title (str): The title to search its full article
+
+        Returns:
+            ArticleModel: Article model object with the given title if exists, else None.
+        """
         return cls.query.filter_by(title=title).first()
 
     @classmethod
     def find_by_team(cls, team):
+        """Find articles by team
+
+        Args:
+            team (TeamModel): The team to search its full articles
+
+        Returns:
+            ArticleModel: Article model object with the given title if exists, else None.
+        """
         return cls.query.filter_by(team=team, source='One')
 
     @classmethod
     def save_to_db_bulk(cls, article_teams):
+        """Save articles to db
+
+        Args:
+            article_teams ([ArticleModel]): List of articles to save to db
+        """
         db.session.bulk_save_objects(article_teams)
         db.session.commit()
 
     @classmethod
     def find_by_articles_url(cls, articles_urls):
+        """Find articles by urls
+
+        Args:
+            articles_urls ([str]): list of urls to find their full articles.
+
+        Returns:
+            [ArticleModel]: Article model objects with the given urls if exists, else None.
+        """
         return cls.query.filter(ArticleModel.url.in_(articles_urls)).all()
 
     @classmethod

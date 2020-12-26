@@ -1,5 +1,4 @@
 from db import db
-
 ArticlesTeamTable = db.Table('ArticlesTeamTable',
     db.Column('id', db.Integer, primary_key=True),
     db.Column('url', db.String, db.ForeignKey('articles.url')),

@@ -5,6 +5,9 @@ from sport5_handler import Sport5Handler
 from Article import ArticleModel
 
 class ArticlesManager(object):
+    """Articles Manager to handle all articles tasks includes 
+    scraping and DB management.
+    """
     def __init__(self, teams: list):
         self.one_handler = OneHandler()
         self.walla_handler = WallaHandler()
@@ -31,6 +34,16 @@ class ArticlesManager(object):
         return True
 
     def get_new_articles(self, one_teams_pages, walla_teams_pages, sport5_teams_pages):
+        """Fetch articles of all teams from One, Sport5 and WallaSport websites
+
+        Args:
+            one_teams_pages (list): One teams pages addresses
+            walla_teams_pages (list): WallaSport teams pages addresses
+            sport5_teams_pages (list): Sport5 teams pages addresses
+
+        Return:
+            Dictionary with teams fetched articles.
+        """
         one_articles_list = self.one_handler.get_new_articles(one_teams_pages)
         walla_articles_list = self.walla_handler.get_new_articles(walla_teams_pages)
         sport5_articles_list = self.sport5_handler.get_new_articles(sport5_teams_pages)

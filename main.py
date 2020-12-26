@@ -50,6 +50,8 @@ def create_tables():
 
 
 def init_teams():
+    """Create teams table in DB
+    """
     teams = []
     for team in TEAMS:
         team_obj = TeamModel(team_name=team,
@@ -61,6 +63,8 @@ def init_teams():
 
 
 def get_new_articles():
+    """Fetch new articles from One, Walla, Spot5 sites for all teams
+    """
     with app.app_context():
         print("*******************************************************************************")
         print("started seearhing for articles..")
@@ -87,6 +91,15 @@ scheduler.add_job(func=get_new_articles, trigger="interval",
 
 
 def token_required(f):
+    """Decorator methos to handle the authontication before the methods that only registered user can do.
+
+    Args:
+        f (method): Do this method if the authenticatopn succeed.
+
+    Raises:
+        RuntimeError: raise error if the authentication failed
+
+    """
     @wraps(f)
     def _verify(*args, **kwargs):
         print(request.headers)
@@ -125,6 +138,11 @@ def token_required(f):
 
 @app.route('/register', methods=['POST'])
 def regiter():
+    """Register a new user to the web
+
+    Returns:
+        (message, status): Method results message, Status code
+    """
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
@@ -142,6 +160,8 @@ def regiter():
 
 @app.route('/login', methods=['POST'])
 def login():
+    """Login to web
+    """
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
@@ -159,13 +179,21 @@ def login():
         'iat': datetime.utcnow(),
         'exp': datetime.utcnow() + timedelta(minutes=30)},
         current_app.config['SECRET_KEY'])
+    print(token)
     return jsonify({'token': token.decode('UTF-8')})
 
 
 @app.route('/get_my_articles')
 @token_required
 def get_my_articles(auth):
+    """Get the teams articls of the user that is logged in.
 
+    Args:
+        auth (UserModel): Curret logged-in user.
+
+    Returns:
+        articles (dict): List of articles as JSON format.
+    """
     user = auth
 
     articles = {}
@@ -185,6 +213,11 @@ def get_my_articles(auth):
 @app.route('/logout')
 @token_required
 def logout():
+    """Log out the User
+
+    Returns:
+        (str): Logout message
+    """
     logout_user()
     return "loggedout"
 
@@ -192,6 +225,14 @@ def logout():
 @app.route('/teams', methods=['POST'])
 @token_required
 def add_teams(auth):
+    """Add teams to User
+
+    Args:
+        auth (UserModel): The user to add team.
+
+    Returns:
+        (message, status): Method results message, Status code
+    """
     data = request.get_json()
     # username = data.get('username')
     # password = data.get('password')
@@ -212,6 +253,14 @@ def add_teams(auth):
 @app.route('/teams')
 @token_required
 def get_my_teams(auth):
+    """Get User teams
+
+    Args:
+        auth (UserModel): Current logged-in user
+
+    Returns:
+        (message, status): Method results message, Status code
+    """
     user = auth
     res = [x.team_name for x in user.teams]
     print(res)
@@ -222,6 +271,14 @@ def get_my_teams(auth):
 @app.route('/teamsRem', methods=['POST'])
 @token_required
 def remove_teams(auth):
+    """Remove teams from the current logged-in user
+
+    Args:
+        auth (UserModel): Current logged-in user
+
+    Returns:
+        (message, status): Method results message, Status code
+    """
     data = request.json
 
     teams = data.get('teams')
