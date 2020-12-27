@@ -277,20 +277,19 @@ def remove_teams(auth):
 
     teams = data.get('teams')
     user = auth
-
-    teams_remove = get_teams(teams)
+    teamslist = [teams]
+    print(teamslist)
+    teams_remove = get_teams(teamslist)
     user.teams.remove(teams_remove[0])
     user.save_to_db()
     return {'Message': user.json()}, 200
 
 
 def get_teams(teams):
-    data = request.get_json()
-    teams = data
+    ans = TeamModel.find_by_teams_names(teams)
 
-    teams = TeamModel.find_by_teams_names(teams)
-    print(teams)
-    return teams
+    return ans
+
 
 
 atexit.register(lambda: scheduler.shutdown())
