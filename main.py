@@ -82,7 +82,7 @@ def get_new_articles():
 
 scheduler = BackgroundScheduler()
 scheduler.add_job(func=get_new_articles, trigger="interval",
-                  seconds=60*30, next_run_time=datetime.now()+timedelta(seconds=3000))
+                  seconds=60*30, next_run_time=datetime.now()+timedelta(seconds=60))
 
 
 def token_required(f):
